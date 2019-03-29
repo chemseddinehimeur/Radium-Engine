@@ -32,7 +32,7 @@ class RA_ENGINE_API Displayable {
     virtual ~Displayable() = default;
 
     /// Returns the picking rendermode advised by the object (default PickingRenderMode::NO_PICKING)
-    inline PickingRenderMode pickingRenderMode() const { return _pickingRenderMode; }
+    virtual inline PickingRenderMode pickingRenderMode() const { return _pickingRenderMode; }
 
     /// Returns the name of the mesh.
     inline const std::string& getName() const { return _name; }
