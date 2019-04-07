@@ -106,8 +106,23 @@ class RA_ENGINE_API RadiumEngine {
      * @note Calling this method set the engine in the "loading state".
      * @param file
      * @return true if file is loaded, false else.
+     * @see loadFileSequence
      */
     bool loadFile( const std::string& file );
+
+    /**
+     * Try to loads the given file sequence.
+     *
+     * Follows the same logic than loadFile when no loader is found to process an input frame.
+     * Return false if no frame has been loaded. If at least one frame is loaded, creates the root
+     * entity of the loaded scene and gives the content of the file to all systems to add components
+     * and to this root entity.
+     * @note Calling this method set the engine in the "loading state".
+     * @param file
+     * @return true if file is loaded, false else.
+     * @see loadFile
+     */
+    bool loadFileSequence( const std::vector<std::string>& sequence );
 
     /**
      * Access to the content of the loaded file.

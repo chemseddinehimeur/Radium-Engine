@@ -45,27 +45,29 @@ void RadiumEngine::initialize() {
     m_loadingState = false;
 }
 
-void RadiumEngine::registerDefaultPrograms()
-{
+void RadiumEngine::registerDefaultPrograms() {
     auto shaderProgramManager = ShaderProgramManager::getInstance();
-    CORE_ASSERT(shaderProgramManager != nullptr, "ShaderProgramManager needs to be created first");
+    CORE_ASSERT( shaderProgramManager != nullptr,
+                 "ShaderProgramManager needs to be created first" );
 
     // Create named strings which correspond to shader files that you want to use in shaders's
     // includes. NOTE: if you want to add a named string to handle a new shader include file, be
     // SURE that the name (first parameter) begin with a "/", otherwise it won't work !
     // Radium V2 : are these initialization required here ? They will be better in
     // Engine::Initialize .... Define a better ressources management and initialization
-    shaderProgramManager->addNamedString("/Helpers.glsl", "Shaders/Helpers.glsl");
-    shaderProgramManager->addNamedString("/Structs.glsl", "Shaders/Structs.glsl");
-    shaderProgramManager->addNamedString("/Tonemap.glsl", "Shaders/Tonemap.glsl");
-    shaderProgramManager->addNamedString("/LightingFunctions.glsl", "Shaders/LightingFunctions.glsl");
-    shaderProgramManager->addNamedString("/TransformStructs.glsl", "Shaders/Transform/TransformStructs.glsl");
-    shaderProgramManager->addNamedString("/DefaultLight.glsl", "Shaders/Lights/DefaultLight.glsl");
+    shaderProgramManager->addNamedString( "/Helpers.glsl", "Shaders/Helpers.glsl" );
+    shaderProgramManager->addNamedString( "/Structs.glsl", "Shaders/Structs.glsl" );
+    shaderProgramManager->addNamedString( "/Tonemap.glsl", "Shaders/Tonemap.glsl" );
+    shaderProgramManager->addNamedString( "/LightingFunctions.glsl",
+                                          "Shaders/LightingFunctions.glsl" );
+    shaderProgramManager->addNamedString( "/TransformStructs.glsl",
+                                          "Shaders/Transform/TransformStructs.glsl" );
+    shaderProgramManager->addNamedString( "/DefaultLight.glsl",
+                                          "Shaders/Lights/DefaultLight.glsl" );
 
     // Engine support some built-in materials. Register here
     BlinnPhongMaterial::registerMaterial();
     RayMarchingMaterial::registerMaterial();
-
 }
 
 void RadiumEngine::cleanup() {
@@ -160,6 +162,8 @@ Displayable* RadiumEngine::getMesh( const std::string& entityName, const std::st
 }
 
 bool RadiumEngine::loadFile( const std::string& filename ) {
+    releaseFile();
+
     std::string extension = Core::Utils::getFileExt( filename );
 
     for ( auto& l : m_fileLoaders )
@@ -204,6 +208,65 @@ bool RadiumEngine::loadFile( const std::string& filename ) {
         m_entityManager->removeEntity( entity );
     }
     m_loadingState = true;
+    return true;
+}
+
+bool RadiumEngine::loadFileSequence( const std::vector<std::string>& sequence ) {
+    releaseFile();
+
+    if ( sequence.empty() )
+        return false;
+
+    std::string entityName = Core::Utils::getBaseName( sequence.front(), false );
+    Entity* entity = m_entityManager->createEntity( entityName );
+
+    for ( const auto& filename : sequence )
+    {
+        std::string extension = Core::Utils::getFileExt( filename );
+
+        for ( auto& l : m_fileLoaders )
+        {
+            if ( l->handleFileExtension( extension ) )
+            {
+                FileData* data = l->loadFile( filename );
+                if ( data != nullptr )
+                {
+                    if ( m_loadedFile == nullptr )
+                        m_loadedFile.reset( data );
+                    else
+                    { m_loadedFile->moveIn( data ); }
+                    break;
+                }
+            }
+        }
+
+        if ( m_loadedFile == nullptr )
+        {
+            LOG( logWARNING ) << "There is no loader to handle \"" << extension
+                              << "\" extension ! File can't be loaded. Skipping to next frame.";
+
+        } else
+        {
+
+            for ( auto& system : m_systems )
+            {
+                system.second->handleAssetLoading( entity, m_loadedFile.get() );
+            }
+        }
+    }
+
+    if ( !entity->getComponents().empty() )
+    {
+        for ( auto& comp : entity->getComponents() )
+        {
+            comp->initialize();
+        }
+        m_loadingState = true;
+    } else
+    {
+        LOG( logWARNING ) << "File sequence has no usable data. Deleting entity...";
+        m_entityManager->removeEntity( entity );
+    }
     return true;
 }
 

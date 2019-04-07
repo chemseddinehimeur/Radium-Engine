@@ -59,7 +59,12 @@ class RA_CORE_API FileData final {
     /// RESET
     inline void reset();
 
+    inline bool processed() const { return m_processed; }
+
     inline void displayInfo() const;
+
+    /// move data in current instance, and call data->reset() after move
+    inline void moveIn( FileData* data );
 
     // TODO(Matthieu) : handle attributes in a better way than "public:"
   public:

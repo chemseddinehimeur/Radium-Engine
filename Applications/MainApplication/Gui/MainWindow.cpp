@@ -25,6 +25,7 @@
 #include <QColorDialog>
 #include <QComboBox>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QSettings>
 #include <QToolButton>
@@ -209,10 +210,18 @@ void MainWindow::loadFile() {
     {
         settings.setValue( "files/load", pathList.front() );
 
-        for ( const auto& file : pathList )
-        {
-            emit fileLoading( file );
-        }
+        if ( pathList.size() == 1 ||
+             QMessageBox::question( this, "Load files as sequence",
+                                    "You selected multiple files.\\Press YES to load as sequence, "
+                                    "NO to load all files individually." ) == QMessageBox::Yes )
+
+            // load each file independantly
+            for ( const auto& file : pathList )
+            {
+                emit fileLoading( file );
+            }
+        else
+        { emit sequenceLoading( pathList ); }
     }
 }
 

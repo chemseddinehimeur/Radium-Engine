@@ -525,15 +525,31 @@ void main(void) {
     int mipmapLevel = 6;
 //    float currentMipMapLevel = textureQueryLod(material.buffer, in_texcoord).x;
 
+    float zaxis = 0.5;
+    float yaxis = 0.5;
+    float overflowValue = 10.*material.maxValuePerRay;
+    float thickness = 0.005;
+    bool drawYAxis = false;
+    bool drawZAxis = false;
+    bool drawAxis = false;
+
     for(int i = 0;
         i<1000;
         i++) {
-        float w = 1.;
-        value = textureLod(material.buffer, raypos, 0.).r;
-        for (int level = 1; level < mipmapLevel; level++){
-            //w = w * 0.5;
-            w = w * (mipmapLevel - level)/mipmapLevel;
-            value += w * textureLod(material.buffer, raypos, level).r;
+//        float dz = raypos.z - zaxis;
+//        float dy = raypos.y - yaxis;
+//        if (dy*dy <thickness*thickness) drawYAxis = true;
+//        if (dz*dz <thickness*thickness) drawZAxis = true;
+//        if (dy*dy + dz*dz < thickness*thickness) drawAxis = true;
+//        else
+        { 
+            float w = 1.;
+            value = textureLod(material.buffer, raypos, 0.).r;
+            for (int level = 1; level < mipmapLevel; level++){
+                //w = w * 0.5;
+                w = w * (mipmapLevel - level)/mipmapLevel;
+                value += w * textureLod(material.buffer, raypos, level).r;
+            }
         }
         if ( value != 0. )
         {
@@ -551,16 +567,20 @@ void main(void) {
 
     if ( ! hit ) discard;
 
-    // replace the constant 10 by the expectation of the number of photons on the ray ?
     float opacity = clamp(accum/material.maxValuePerRay, 0., 0.999);
     opacity = 1.- (pow(1.-opacity, material.valuePowCorrection));
 #ifdef USE_AS_TRANSPARENT
+
     float w  = weight(gl_FragCoord.z, opacity);
     float realOpacity = material.realOpacityFactor*opacity;
     f_Accumulation = colormap ( opacity  ) * realOpacity;
+    if( drawYAxis ) f_Accumulation.rgb += vec3(0.3, 0.5, 0.3);
+    if( drawZAxis ) f_Accumulation.rgb += vec3(0.3, 0.3, 0.5);
+    if( drawAxis ) { f_Accumulation= vec4(0.3, 0.3, 0.3, 1.0); realOpacity = 1.; }
 //    f_Accumulation = vec4(clamp(accumColor,0.,1.).xyz, 1.) * opacity * w;
     //f_Accumulation = vec4(vec3(opacity), 1);
     f_Revealage = vec4(realOpacity);
+
 #endif
 
 #ifdef USE_AS_OPAQUE

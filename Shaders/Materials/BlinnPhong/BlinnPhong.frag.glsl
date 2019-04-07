@@ -1,6 +1,5 @@
 //This is for a preview of the shader composition, but in time we must use more specific Light Shader
 #include "DefaultLight.glsl"
-#include "BlinnPhongMaterial.glsl"
 
 uniform sampler2D uShadowMap;
 
@@ -12,11 +11,16 @@ layout (location = 2) in vec3 in_normal;
 layout (location = 3) in vec3 in_tangent;
 layout (location = 4) in vec3 in_viewVector;
 layout (location = 5) in vec3 in_lightVector;
+layout (location = 6) in vec3 in_vertexcolor;
+
+#include "BlinnPhongMaterial.glsl"
 
 void main() {
     // Discard non fully opaque fragments
     if ( toDiscard(material, in_texcoord.xy) || (material.alpha < 1) )
         discard;
+
+    //in_vertexcolor = vec3(1.0,0.,0.);
 
 	vec3 binormal = normalize(cross(in_normal, in_tangent));
 

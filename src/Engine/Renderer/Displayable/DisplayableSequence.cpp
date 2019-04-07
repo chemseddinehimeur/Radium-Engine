@@ -15,10 +15,10 @@ void DisplayableSequence::activate( Core::Utils::Index id ) {
     { _current.setInvalid(); }
 }
 
-Core::Utils::optionnal<const std::unique_ptr<Displayable>&> DisplayableSequence::current() const {
+Displayable* DisplayableSequence::current() const {
     if ( _current.isValid() )
-        return _sequence[_current];
-    return {};
+        return _sequence[_current].get();
+    return nullptr;
 }
 
 Displayable::PickingRenderMode DisplayableSequence::pickingRenderMode() const {
@@ -28,13 +28,13 @@ Displayable::PickingRenderMode DisplayableSequence::pickingRenderMode() const {
 }
 
 const Core::Geometry::AbstractGeometry& DisplayableSequence::getGeometry() const {
-    const auto& c = current();
+    Displayable* c = current();
     CORE_ASSERT( c != nullptr, "[Displayable Sequence] Invalid object" );
     return c->getGeometry();
 }
 
 Core::Geometry::AbstractGeometry& DisplayableSequence::getGeometry() {
-    const auto& c = current();
+    Displayable* c = current();
     CORE_ASSERT( c != nullptr, "[Displayable Sequence] Invalid object" );
     return c->getGeometry();
 }

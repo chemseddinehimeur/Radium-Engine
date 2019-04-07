@@ -35,7 +35,7 @@ class RA_ENGINE_API DisplayableSequence : public Displayable {
     inline Core::Utils::Index currentIndex() const { return _current; }
 
     /// returns the activated object, or null if currentIndex is invalid
-    Core::Utils::optionnal<const std::unique_ptr<Displayable>&> current() const;
+    Displayable* current() const;
 
     /// Returns the picking rendermode of the current Displayable
     PickingRenderMode pickingRenderMode() const override;

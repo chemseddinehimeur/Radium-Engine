@@ -129,6 +129,20 @@ inline void FileData::reset() {
     m_processed = false;
 }
 
+inline void FileData::moveIn( FileData* data ) {
+    auto moveAndAppend = [this]( auto& input, auto&& rhs ) {
+        input.insert( input.end(), std::make_move_iterator( rhs.begin() ),
+                      std::make_move_iterator( rhs.end() ) );
+    };
+    moveAndAppend( m_geometryData, data->m_geometryData );
+    moveAndAppend( m_volumeData, data->m_volumeData );
+    moveAndAppend( m_handleData, data->m_handleData );
+    moveAndAppend( m_animationData, data->m_animationData );
+    moveAndAppend( m_lightData, data->m_lightData );
+    moveAndAppend( m_cameraData, data->m_cameraData );
+    data->reset();
+}
+
 inline void FileData::displayInfo() const {
     using namespace Core::Utils; // log
     uint64_t vtxCount = 0;

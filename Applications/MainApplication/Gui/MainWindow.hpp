@@ -101,6 +101,9 @@ class MainWindow : public Ra::GuiBase::MainWindowInterface, private Ui::MainWind
     /// Emitted when the frame loads
     void fileLoading( const QString path );
 
+    /// Emitted when the sequence loads
+    void sequenceLoading( const QStringList paths );
+
     /// Emitted when the user changes the timer box ("Frame average over count")
     void framescountForStatsChanged( int count );
 

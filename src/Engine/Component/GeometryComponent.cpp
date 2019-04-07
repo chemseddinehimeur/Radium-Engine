@@ -149,6 +149,7 @@ void TriangleMeshComponent::generateTriangleMesh( const Ra::Core::Asset::Geometr
             Ra::Core::make_shared<BlinnPhongMaterial>( data->getName() + "_DefaultBPMaterial" );
         mat->m_kd = Ra::Core::Utils::Color::Grey();
         mat->m_ks = Ra::Core::Utils::Color::White();
+        mat->m_hasPerVertexKd = data->hasColors();
         rt.setMaterial( mat );
         auto builder = EngineRenderTechniques::getDefaultTechnique( "BlinnPhong" );
         builder.second( rt, isTransparent );
