@@ -81,6 +81,7 @@ class RA_ENGINE_API BlinnPhongMaterial final : public Material {
     Scalar m_ns{1.0};
     Scalar m_alpha{1.0};
     bool m_hasPerVertexKd{false};
+    bool m_renderAsSplat{false};
 
     /**
      * Add an new texture, from a TextureData, to control the specified BSDF parameter.

@@ -10,7 +10,6 @@ const float Pi = 3.141592653589793;
 struct BlinnPhongTextures
 {
     int hasKd;
-    int hasPerVertexKd;
     int hasKs;
     int hasNs;
     int hasNormal;
@@ -31,14 +30,15 @@ struct Material
     float ns;
     float alpha;
 
+    int hasPerVertexKd;
+    int renderAsSplat;
+
     BlinnPhongTextures tex;
 };
 
 vec3 getKd(Material material, vec2 texCoord)
 {
-    //return vec3(1.0,0.,0.);
-    return in_vertexcolor.xyz;
-    if (material.tex.hasPerVertexKd == 1)
+    if (material.hasPerVertexKd == 1)
     {
         return in_vertexcolor.xyz;
     }
@@ -96,6 +96,10 @@ bool toDiscard(Material material, vec2 texCoord)
         {
             return true;
         }
+    }
+    if ( material.renderAsSplat == 1)
+    {
+        return dot(texCoord, texCoord) > 1;
     }
     return false;
 }
