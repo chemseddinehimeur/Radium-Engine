@@ -81,9 +81,10 @@ FileData* TinyPlyFileLoader::loadFile( const std::string& filename ) const {
     fileData->m_geometryData.clear();
     fileData->m_geometryData.reserve( 1 );
 
-    auto geometry = std::make_unique<GeometryData>();
-
-    geometry->setType( GeometryData::POINT_CLOUD );
+    static int nameId = 0;
+    // a unique name is required by the component messaging system
+    auto geometry = std::make_unique<GeometryData>( "PC_" + std::to_string( ++nameId ),
+                                                    GeometryData::POINT_CLOUD );
 
     std::vector<float> normals;
     std::vector<uint8_t> colors;
