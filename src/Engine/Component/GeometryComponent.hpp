@@ -35,6 +35,7 @@ class RA_ENGINE_API TriangleMeshComponent : public Component {
 
     /// Returns the current display geometry.
     const Ra::Core::Geometry::TriangleMesh& getMesh() const;
+    Mesh* getDisplayMesh();
 
   public:
     // Component communication management
@@ -84,6 +85,7 @@ class RA_ENGINE_API VolumeComponent : public Component {
 
     /// Returns the index of the associated RO (the display mesh)
     Ra::Core::Utils::Index getRenderObjectIndex() const;
+    VolumeObject* getDisplayVolume();
 
   private:
     void generateVolumeRender( const Ra::Core::Asset::VolumeData* data );

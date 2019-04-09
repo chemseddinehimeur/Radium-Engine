@@ -3,6 +3,8 @@
 namespace Ra {
 namespace Engine {
 
+DisplayableSequence::DisplayableSequence( const std::string& name ) : Displayable( name ) {}
+
 void DisplayableSequence::add( Displayable* object ) {
     _sequence.emplace_back( object );
 }
@@ -10,9 +12,20 @@ void DisplayableSequence::add( Displayable* object ) {
 void DisplayableSequence::activate( Core::Utils::Index id ) {
     if ( id.isValid() && id < _sequence.size() )
     {
-        _current = id;
+        changeCurrent( id );
     } else
-    { _current.setInvalid(); }
+    { changeCurrent(); }
+}
+
+void DisplayableSequence::activateNext( bool loopOver ) {
+    if ( _current.isValid() )
+    {
+        if ( _current == _sequence.size() - 1 )
+            changeCurrent( loopOver ? Core::Utils::Index( 0 ) : Core::Utils::Index::Invalid() );
+        else
+            changeCurrent( _current + 1 );
+    } else
+    { changeCurrent(); }
 }
 
 Displayable* DisplayableSequence::current() const {
@@ -59,6 +72,10 @@ size_t DisplayableSequence::getNumVertices() const {
     if ( _current.isValid() )
         return _sequence[_current]->getNumVertices();
     return 0;
+}
+
+void DisplayableSequence::changeCurrent( Core::Utils::Index newIndex ) {
+    _current = newIndex;
 }
 
 } // namespace Engine

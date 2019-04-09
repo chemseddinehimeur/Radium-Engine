@@ -190,6 +190,11 @@ const Ra::Core::Geometry::TriangleMesh& TriangleMeshComponent::getMesh() const {
     return _displayMesh->getTriangleMesh();
 }
 
+Mesh* TriangleMeshComponent::getDisplayMesh() {
+    CORE_ASSERT( _displayMesh != nullptr, "DisplayMesh should exist while component is alive" );
+    return _displayMesh.get();
+}
+
 void TriangleMeshComponent::setContentName( const std::string& name ) {
     this->m_contentName = name;
 }
@@ -320,6 +325,11 @@ void VolumeComponent::generateVolumeRender( const Ra::Core::Asset::VolumeData* d
 
     setupIO( m_contentName );
     m_volumeIndex = addRenderObject( ro );
+}
+
+VolumeObject* VolumeComponent::getDisplayVolume() {
+    CORE_ASSERT( _displayVolume != nullptr, "DisplayMesh should exist while component is alive" );
+    return _displayVolume.get();
 }
 
 Ra::Core::Utils::Index VolumeComponent::getRenderObjectIndex() const {

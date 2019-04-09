@@ -4,6 +4,7 @@
 
 namespace Ra {
 namespace Engine {
+class SequenceComponent;
 
 class RA_ENGINE_API SequenceSystem : public AbstractTimedSystem {
   public:
@@ -18,6 +19,7 @@ class RA_ENGINE_API SequenceSystem : public AbstractTimedSystem {
                         const Ra::Engine::FrameInfo& frameInfo ) override;
 
     /// Load the animation from FileData
+    /// Each element of the animation is loaded using a GeometrySystem
     void handleAssetLoading( Ra::Engine::Entity* entity,
                              const Ra::Core::Asset::FileData* fileData ) override;
 
@@ -38,6 +40,15 @@ class RA_ENGINE_API SequenceSystem : public AbstractTimedSystem {
     /// Restores the state data related to the \p frameID -th frame from the cache file.
     /// \returns true if the frame has been successfully restored, false otherwise.
     bool restoreFrame( const std::string& dir, uint frameId ) override;
+
+  private:
+    /// See if animation is playing or paused
+    /// \FIXME move to AbstractTimedSystem
+    bool m_isPlaying{true};
+
+    /// True if one step has been required to play
+    /// \FIXME move to AbstractTimedSystem
+    bool m_oneStep{false};
 };
 
 } // namespace Engine

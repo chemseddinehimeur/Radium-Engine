@@ -30,6 +30,8 @@ class RA_ENGINE_API DisplayableSequence : public Displayable {
 
     /// select activated object
     void activate( Core::Utils::Index id );
+    /// activate next frame
+    void activateNext( bool loopOver = true );
 
     /// returns index of the activated object
     inline Core::Utils::Index currentIndex() const { return _current; }
@@ -51,6 +53,9 @@ class RA_ENGINE_API DisplayableSequence : public Displayable {
 
     size_t getNumFaces() const override;
     size_t getNumVertices() const override;
+
+  protected:
+    void changeCurrent( Core::Utils::Index newIndex = Core::Utils::Index::Invalid() );
 
   private:
     Core::Utils::Index _current;
