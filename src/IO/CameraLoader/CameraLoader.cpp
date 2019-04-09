@@ -27,7 +27,7 @@ bool CameraFileLoader::handleFileExtension( const std::string& extension ) const
     return extension == camExt;
 }
 
-FileData* CameraFileLoader::loadFile( const std::string& filename ) {
+FileData* CameraFileLoader::loadFile( const std::string& filename ) const {
     // Create the FileData
     auto fileData = new FileData( filename );
     if ( !fileData->isInitialized() )

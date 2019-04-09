@@ -1,5 +1,4 @@
-#ifndef RADIUMENGINE_TINYPLYFILELOADER_HPP
-#define RADIUMENGINE_TINYPLYFILELOADER_HPP
+#pragma once
 
 #include <Core/Asset/FileLoaderInterface.hpp>
 #include <IO/RaIO.hpp>
@@ -7,11 +6,18 @@
 namespace Ra {
 namespace IO {
 
-class RA_IO_API TinyPlyFileLoader : public Core::Asset::FileLoaderInterface {
+/*!
+ * \brief The SequenceFileLoader implements a hack to load sequences of Displayable using FileData.
+ *
+ * \FIXME FileData put hard constraints on the loading mechanism and prevent to easily load
+ * sequences.
+ * \TODO Remove FileData
+ */
+class RA_IO_API SequenceFileLoader : public Core::Asset::FileLoaderInterface {
   public:
-    TinyPlyFileLoader();
+    SequenceFileLoader();
 
-    ~TinyPlyFileLoader() override;
+    ~SequenceFileLoader() override;
 
     std::vector<std::string> getFileExtensions() const override;
     bool handleFileExtension( const std::string& extension ) const override;
@@ -21,5 +27,3 @@ class RA_IO_API TinyPlyFileLoader : public Core::Asset::FileLoaderInterface {
 
 } // namespace IO
 } // namespace Ra
-
-#endif // RADIUMENGINE_ASSIMPFILELOADER_HPP

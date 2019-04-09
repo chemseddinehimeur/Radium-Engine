@@ -13,6 +13,11 @@ file(GLOB io_inlines ${CMAKE_CURRENT_SOURCE_DIR}/*.inl
 
 set(io_libs radiumCore radiumEngine)
 
+add_subdirectory( SequenceLoader )
+set( io_sources ${io_sources} ${sequence_sources} )
+set( io_headers ${io_headers} ${sequence_headers} )
+set( io_inlines ${io_inlines} ${sequence_inlines} )
+
 if( RADIUM_CAMERA_LOADER_SUPPORT )
     add_subdirectory( CameraLoader )
     set( io_sources ${io_sources} ${cameraloader_sources} )

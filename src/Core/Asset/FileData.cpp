@@ -12,6 +12,7 @@ FileData::FileData( const std::string& filename, const bool VERBOSE_MODE ) :
     m_handleData(),
     m_animationData(),
     m_lightData(),
+    m_sequence( nullptr ),
     m_processed( false ),
     m_verbose( VERBOSE_MODE ) {}
 

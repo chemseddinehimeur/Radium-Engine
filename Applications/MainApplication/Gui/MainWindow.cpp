@@ -213,7 +213,7 @@ void MainWindow::loadFile() {
         if ( pathList.size() == 1 ||
              QMessageBox::question( this, "Load files as sequence",
                                     "You selected multiple files.\\Press YES to load as sequence, "
-                                    "NO to load all files individually." ) == QMessageBox::Yes )
+                                    "NO to load all files individually." ) == QMessageBox::No )
 
             // load each file independantly
             for ( const auto& file : pathList )
@@ -221,7 +221,19 @@ void MainWindow::loadFile() {
                 emit fileLoading( file );
             }
         else
-        { emit sequenceLoading( pathList ); }
+        {
+            // sequences are handled by IO::SequenceLoader, which requires a *.seq file
+            std::string tmpname = std::tmpnam( nullptr );
+            tmpname.append( ".seq" );
+
+            std::ofstream seqFile;
+            seqFile.open( tmpname );
+            for ( const auto& p : pathList )
+                seqFile << p.toStdString() << "\n";
+            seqFile.close();
+            emit fileLoading( QString::fromStdString( tmpname ) );
+            seqFile.close();
+        }
     }
 }
 

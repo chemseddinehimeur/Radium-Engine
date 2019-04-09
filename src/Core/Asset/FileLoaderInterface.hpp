@@ -20,7 +20,7 @@ class FileLoaderInterface {
     virtual bool handleFileExtension( const std::string& extension ) const = 0;
 
     //! Try to load file, returns nullptr in case of failure
-    virtual FileData* loadFile( const std::string& filename ) = 0;
+    virtual FileData* loadFile( const std::string& filename ) const = 0;
 
     //! Unique name of the loader
     virtual std::string name() const = 0;

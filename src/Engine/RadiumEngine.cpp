@@ -166,7 +166,7 @@ bool RadiumEngine::loadFile( const std::string& filename ) {
 
     std::string extension = Core::Utils::getFileExt( filename );
 
-    for ( auto& l : m_fileLoaders )
+    for ( const auto& l : m_fileLoaders )
     {
         if ( l->handleFileExtension( extension ) )
         {

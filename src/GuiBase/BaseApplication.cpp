@@ -26,6 +26,7 @@
 #include <GuiBase/Viewer/CameraInterface.hpp>
 #include <PluginBase/RadiumPluginInterface.hpp>
 
+#include <IO/SequenceLoader/SequenceLoader.hpp>
 #ifdef IO_USE_CAMERA_LOADER
 #    include <IO/CameraLoader/CameraLoader.hpp>
 #endif
@@ -216,6 +217,9 @@ BaseApplication::BaseApplication( int argc, char** argv, const WindowFactory& fa
     {
         LOG( logERROR ) << "An error occurred while trying to load plugins.";
     }
+
+    m_engine->registerFileLoader(
+        std::shared_ptr<FileLoaderInterface>( new IO::SequenceFileLoader() ) );
 
     // Make builtin loaders the fallback if no plugins can load some file format
 #ifdef IO_USE_TINYPLY

@@ -25,7 +25,8 @@ layout (location = 5) in vec3 in_lightVector[];
 layout (location = 6) in vec3 in_vertexcolor[];
 
 uniform Transform transform;
-float pointCloudSplatRadius = 1.6; // fixme -> uniform
+//float pointCloudSplatRadius = 0.295; // fixme -> uniform
+float pointCloudSplatRadius = 0.9; // fixme -> uniform
 
 layout (location = 0) out vec3 out_position;
 layout (location = 1) out vec3 out_texcoord;

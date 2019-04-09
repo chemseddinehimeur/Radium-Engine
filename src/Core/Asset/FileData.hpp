@@ -77,6 +77,8 @@ class RA_CORE_API FileData final {
     std::vector<std::unique_ptr<AnimationData>> m_animationData;
     std::vector<std::unique_ptr<LightData>> m_lightData;
     std::vector<std::unique_ptr<CameraData>> m_cameraData;
+    /// \Fixme Find a better way to handle and recognize sequences during the loading process
+    std::unique_ptr<FileData> m_sequence;
     bool m_processed;
     bool m_verbose;
 };

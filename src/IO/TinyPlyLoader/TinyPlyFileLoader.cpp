@@ -28,7 +28,7 @@ bool TinyPlyFileLoader::handleFileExtension( const std::string& extension ) cons
     return extension.compare( plyExt ) == 0;
 }
 
-FileData* TinyPlyFileLoader::loadFile( const std::string& filename ) {
+FileData* TinyPlyFileLoader::loadFile( const std::string& filename ) const {
 
     // Read the file and create a std::istringstream suitable
     // for the lib -- tinyply does not perform any file i/o.
