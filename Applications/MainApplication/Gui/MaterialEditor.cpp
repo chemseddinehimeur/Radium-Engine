@@ -183,6 +183,7 @@ void MaterialEditor::updateBlinnPhongViz() {
     kdR->setValue( kdr );
     kdG->setValue( kdg );
     kdB->setValue( kdb );
+    kUsePerVertex->setChecked( m_blinnphongmaterial->m_hasPerVertexKd );
 
     ksR->setValue( ksr );
     ksG->setValue( ksg );
@@ -228,4 +229,8 @@ void Ra::Gui::MaterialEditor::on_m_raymarching_opacityFactor_valueChanged( doubl
 
 void Ra::Gui::MaterialEditor::on_m_raymarching_stepsize_valueChanged( double arg1 ) {
     m_raymarchingmaterial->m_stepSize = Scalar( arg1 );
+}
+
+void Ra::Gui::MaterialEditor::on_kUsePerVertex_clicked( bool checked ) {
+    m_blinnphongmaterial->m_hasPerVertexKd = checked;
 }
