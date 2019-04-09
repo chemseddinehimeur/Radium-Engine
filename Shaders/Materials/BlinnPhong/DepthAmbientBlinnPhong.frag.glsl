@@ -26,7 +26,7 @@ void main() {
 	vec3 localNormal = getNormal(material, in_texcoord.xy, in_normal, in_tangent, binormal);
 
 
-    out_ambient 	= vec4(getKd(material, in_texcoord.xy) * 0.1, 1.0);
+    out_ambient 	= vec4(getKd(material, in_texcoord.xy) * 0.01, 1.0);
     out_normal 		= vec4(localNormal * 0.5 + 0.5, 1.0 );
     out_diffuse 	= vec4(getKd(material, in_texcoord.xy), 1.0);
     out_specular 	= vec4(getKs(material, in_texcoord.xy), 1.0);
