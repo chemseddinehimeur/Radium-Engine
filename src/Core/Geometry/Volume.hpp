@@ -180,6 +180,11 @@ class RA_CORE_API VolumeGrid : public AbstractDiscreteVolume {
 
     inline const Container& data() const { return _data; }
 
+    inline void addToAllBin( const ValueType& value ) {
+        for ( auto& v : _data )
+            v += value;
+    }
+
   protected:
     /// Get the function value a given position p
     inline Utils::optional<ValueType> getBinValue( typename IndexType::Scalar idx ) const override {
