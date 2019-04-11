@@ -201,6 +201,7 @@ class RA_ENGINE_API RadiumEngine {
     std::unique_ptr<Core::Asset::FileData> m_loadedFile;
 
     bool m_loadingState{false};
+    bool m_requestSyncTask{false};
 };
 
 } // namespace Engine

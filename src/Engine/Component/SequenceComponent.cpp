@@ -76,6 +76,7 @@ void SequenceComponent::nextFrame() {
 }
 
 void SequenceComponent::reset( int id ) {
+    LOG( Core::Utils::logINFO ) << "Reset Sequence Component " << getName().c_str();
     auto roMgr = getRoMgr();
     bool visible =
         _sequenceIndex.isValid() ? roMgr->getRenderObject( _sequenceIndex )->isVisible() : false;

@@ -95,7 +95,8 @@ void RadiumEngine::endFrameSync() {
 
 void RadiumEngine::getTasks( Core::TaskQueue* taskQueue, Scalar dt ) {
     static uint frameCounter = 0;
-    FrameInfo frameInfo{dt, frameCounter++};
+    FrameInfo frameInfo{dt, frameCounter++, m_requestSyncTask};
+    m_requestSyncTask = false;
     for ( auto& syst : m_systems )
     {
         syst.second->generateTasks( taskQueue, frameInfo );
@@ -202,6 +203,7 @@ bool RadiumEngine::loadFile( const std::string& filename ) {
         {
             comp->initialize();
         }
+        m_requestSyncTask = true;
     } else
     {
         LOG( logWARNING ) << "File \"" << filename << "\" has no usable data. Deleting entity...";
@@ -262,6 +264,7 @@ bool RadiumEngine::loadFileSequence( const std::vector<std::string>& sequence ) 
             comp->initialize();
         }
         m_loadingState = true;
+        m_requestSyncTask = true;
     } else
     {
         LOG( logWARNING ) << "File sequence has no usable data. Deleting entity...";

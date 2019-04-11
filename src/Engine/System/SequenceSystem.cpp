@@ -7,6 +7,7 @@
 #include <Engine/Component/GeometryComponent.hpp>
 #include <Engine/Component/SequenceComponent.hpp>
 #include <Engine/Entity/Entity.hpp>
+#include <Engine/FrameInfo.hpp>
 #include <Engine/RadiumEngine.hpp>
 #include <Engine/Renderer/RenderObject/RenderObject.hpp>
 #include <Engine/Renderer/RenderObject/RenderObjectManager.hpp>
@@ -19,7 +20,16 @@ SequenceSystem::SequenceSystem() = default;
 void SequenceSystem::generateTasks( Core::TaskQueue* taskQueue, const FrameInfo& frameInfo ) {
     const bool playFrame = m_isPlaying || m_oneStep;
 
-    if ( playFrame )
+    if ( frameInfo.m_sync )
+    {
+        for ( auto compEntry : m_components )
+        {
+            auto seqComp = static_cast<SequenceComponent*>( compEntry.second );
+            auto animFunc = std::bind( &SequenceComponent::reset, seqComp, 0 );
+            auto animTask = new Ra::Core::FunctionTask( animFunc, "SequenceAnimatorTask" );
+            taskQueue->registerTask( animTask );
+        }
+    } else if ( playFrame )
     {
         for ( auto compEntry : m_components )
         {
