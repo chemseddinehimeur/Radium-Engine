@@ -28,6 +28,7 @@ class RA_ENGINE_API SequenceComponent : public Component {
   private:
     std::shared_ptr<Engine::DisplayableSequence> _sequence{nullptr};
     std::vector<Ra::Core::Utils::Index> _roIds;
+    Ra::Core::Utils::Index _sequenceIndex{};
 };
 
 } // namespace Engine

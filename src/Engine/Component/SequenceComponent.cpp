@@ -25,11 +25,37 @@ SequenceComponent::~SequenceComponent() = default;
 void SequenceComponent::initialize() {}
 
 void SequenceComponent::addFrameComponent( TriangleMeshComponent* tmc ) {
+    if ( _sequence->size() == 0 )
+    {
+        std::string roName = getName();
+        roName.append( "_RO" );
+        auto roMgr = getRoMgr();
+        auto ro = RenderObject::createRenderObject(
+            roName, this, RenderObjectType::Geometry, _sequence,
+            *( roMgr->getRenderObject( tmc->getRenderObjectIndex() )
+                   ->getRenderTechnique()
+                   .get() ) );
+        _sequenceIndex = addRenderObject( ro );
+    }
+
     _sequence->add( tmc->getDisplayMesh() );
     _roIds.push_back( tmc->getRenderObjectIndex() );
 }
 
 void SequenceComponent::addFrameComponent( VolumeComponent* vlc ) {
+    if ( _sequence->size() == 0 )
+    {
+        std::string roName = getName();
+        roName.append( "_RO" );
+        auto roMgr = getRoMgr();
+        auto ro = RenderObject::createRenderObject(
+            roName, this, RenderObjectType::Geometry, _sequence,
+            *( roMgr->getRenderObject( vlc->getRenderObjectIndex() )
+                   ->getRenderTechnique()
+                   .get() ) );
+        _sequenceIndex = addRenderObject( ro );
+    }
+
     _sequence->add( vlc->getDisplayVolume() );
     _roIds.push_back( vlc->getRenderObjectIndex() );
 }
@@ -39,21 +65,25 @@ void SequenceComponent::postprocess() {
 }
 
 void SequenceComponent::nextFrame() {
-    auto roMgr = RadiumEngine::getInstance()->getRenderObjectManager();
+    auto roMgr = getRoMgr();
+    bool visible =
+        _sequenceIndex.isValid() ? roMgr->getRenderObject( _sequenceIndex )->isVisible() : false;
     if ( _sequence->currentIndex().isValid() )
         roMgr->getRenderObject( _roIds[_sequence->currentIndex()] )->setVisible( false );
     _sequence->activateNext( true );
     if ( _sequence->currentIndex().isValid() )
-        roMgr->getRenderObject( _roIds[_sequence->currentIndex()] )->setVisible( true );
+        roMgr->getRenderObject( _roIds[_sequence->currentIndex()] )->setVisible( visible );
 }
 
 void SequenceComponent::reset( int id ) {
-    auto roMgr = RadiumEngine::getInstance()->getRenderObjectManager();
+    auto roMgr = getRoMgr();
+    bool visible =
+        _sequenceIndex.isValid() ? roMgr->getRenderObject( _sequenceIndex )->isVisible() : false;
     if ( _sequence->currentIndex().isValid() )
         roMgr->getRenderObject( _roIds[_sequence->currentIndex()] )->setVisible( false );
     _sequence->activate( id );
     if ( _sequence->currentIndex().isValid() )
-        roMgr->getRenderObject( _roIds[_sequence->currentIndex()] )->setVisible( true );
+        roMgr->getRenderObject( _roIds[_sequence->currentIndex()] )->setVisible( visible );
 }
 
 } // namespace Engine
