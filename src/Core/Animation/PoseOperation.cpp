@@ -63,22 +63,7 @@ Pose interpolatePoses( const Pose& a, const Pose& b, const Scalar t ) {
 #pragma omp parallel for
     for ( int i = 0; i < int( size ); ++i )
     {
-        // interpolate between the transforms
-        Ra::Core::Transform aTransform = a[i];
-        Ra::Core::Transform bTransform = b[i];
-
-        Ra::Core::Quaternion aRot = Ra::Core::Quaternion( aTransform.rotation() );
-        Ra::Core::Quaternion bRot = Ra::Core::Quaternion( bTransform.rotation() );
-        Ra::Core::Quaternion interpRot = aRot.slerp( t, bRot );
-
-        Ra::Core::Vector3 interpTranslation =
-            ( 1.0 - t ) * aTransform.translation() + t * bTransform.translation();
-
-        Ra::Core::Transform interpolatedTransform;
-        interpolatedTransform.linear() = interpRot.toRotationMatrix();
-        interpolatedTransform.translation() = interpTranslation;
-
-        interpolatedPose[i] = interpolatedTransform;
+        interpolateTransforms( a[i], b[i], t, interpolatedPose[i] );
     }
 
     return interpolatedPose;
@@ -86,15 +71,18 @@ Pose interpolatePoses( const Pose& a, const Pose& b, const Scalar t ) {
 
 void interpolateTransforms( const Ra::Core::Transform& a, const Ra::Core::Transform& b,
                             const Scalar t, Ra::Core::Transform& interpolated ) {
-    Ra::Core::Quaternion aRot = Ra::Core::Quaternion( a.rotation() );
-    Ra::Core::Quaternion bRot = Ra::Core::Quaternion( b.rotation() );
-    Ra::Core::Quaternion interpRot = aRot.slerp( t, bRot );
+    Ra::Core::Matrix3 aR, bR;
+    Ra::Core::Matrix3 aS, bS;
+    a.computeRotationScaling( &aR, &aS );
+    b.computeRotationScaling( &bR, &bS );
 
-    Ra::Core::Vector3 interpTranslation =
-        ( Scalar( 1. ) - t ) * a.translation() + t * b.translation();
+    Ra::Core::Quaternion aRot = Ra::Core::Quaternion( aR );
+    Ra::Core::Quaternion bRot = Ra::Core::Quaternion( bR );
+    Ra::Core::Quaternion iR = aRot.slerp( t, bRot );
+    Ra::Core::Matrix3 iS = ( 1 - t ) * aS + t * bS;
+    Ra::Core::Vector3 iT = ( 1 - t ) * a.translation() + t * b.translation();
 
-    interpolated.linear() = interpRot.toRotationMatrix();
-    interpolated.translation() = interpTranslation;
+    interpolated.fromPositionOrientationScale( iT, iR, iS.diagonal() );
 }
 
 } // namespace Animation
