@@ -2,6 +2,7 @@
 
 #include <assimp/mesh.h>
 #include <assimp/scene.h>
+#include <queue>
 #include <set>
 
 #include <Core/Asset/HandleData.hpp>
@@ -84,7 +85,8 @@ void initMarks( const aiNode* node, std::map<std::string, bool>& flag ) {
 }
 
 void markParents( const aiNode* node, const aiScene* scene, const std::string& meshName,
-                  std::map<std::string, bool>& flag ) {
+                  std::map<std::string, bool>& flag,
+                  std::map<std::string, aiNode*>& skelRootToMeshNode ) {
     flag[assimpToCore( node->mName )] = true;
     // check node's children
     for ( int j = 0; j < node->mNumChildren; ++j )
@@ -102,7 +104,24 @@ void markParents( const aiNode* node, const aiScene* scene, const std::string& m
     }
     if ( node->mParent != nullptr )
     {
-        markParents( node->mParent, scene, meshName, flag );
+        const std::string nodeName = assimpToCore( node->mName );
+        markParents( node->mParent, scene, meshName, flag, skelRootToMeshNode );
+        if ( !flag[assimpToCore( node->mParent->mName )] )
+        {
+            node = node->mParent;
+            for ( int j = 0; j < node->mNumChildren; ++j )
+            {
+                auto child = node->mChildren[j];
+                for ( int i = 0; i < child->mNumMeshes; ++i )
+                {
+                    const auto& mesh = scene->mMeshes[child->mMeshes[i]];
+                    if ( mesh != nullptr && assimpToCore( mesh->mName ) == meshName )
+                    {
+                        skelRootToMeshNode[nodeName] = child;
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -111,7 +130,9 @@ void markParents( const aiNode* node, const aiScene* scene, const std::string& m
 /// LOAD
 void AssimpHandleDataLoader::loadHandleData(
     const aiScene* scene, std::vector<std::unique_ptr<HandleData>>& data ) const {
+    std::map<std::string, aiNode*> skelRootToMeshNode;
     std::set<std::string> meshNames;
+    std::map<std::string, aiBone*> meshBones;
     // load the HandleComponentData for all meshes
     std::map<std::string, HandleComponentData> mapBone2Data;
     std::map<std::string, bool> needNode;
@@ -134,6 +155,7 @@ void AssimpHandleDataLoader::loadHandleData(
             {
                 aiBone* bone = mesh->mBones[j];
                 const std::string boneName = assimpToCore( bone->mName );
+                meshBones[boneName] = bone;
                 auto it = mapBone2Data.find( boneName );
                 if ( it == mapBone2Data.end() )
                 {
@@ -147,7 +169,8 @@ void AssimpHandleDataLoader::loadHandleData(
                 if ( node != nullptr )
                 {
                     // mark parents as needed
-                    markParents( node, scene, meshName, needNode );
+                    markParents( node, scene, assimpToCore( mesh->mName ), needNode,
+                                 skelRootToMeshNode );
                     // check children for end bones
                     if ( node->mNumChildren == 1 )
                     {
@@ -194,10 +217,52 @@ void AssimpHandleDataLoader::loadHandleData(
         }
     }
 
-    // load bone frame once all are registered
+    // load bone frame once all are registered (also deal with offset)
     for ( auto& bone : mapBone2Data )
     {
         loadHandleComponentDataFrame( scene, aiString( bone.first ), bone.second );
+        auto it = meshBones.find( bone.first );
+        if ( it != meshBones.end() )
+        {
+            mapBone2Data[it->first].m_offset = assimpToCore( it->second->mOffsetMatrix );
+        } else
+        {
+            // look for first parent which is a bone, storing parents
+            auto node = scene->mRootNode->FindNode( aiString( bone.first ) );
+            if ( node->mParent == nullptr )
+            {
+                // no parent, offset = Id
+                mapBone2Data[bone.first].m_offset = Ra::Core::Transform::Identity();
+                continue;
+            }
+            std::queue<aiNode*> parents;
+            parents.push( node );
+            while ( node->mParent != nullptr )
+            {
+                node = node->mParent;
+                it = meshBones.find( assimpToCore( node->mName ) );
+                if ( it != meshBones.end() )
+                {
+                    break;
+                }
+                parents.push( node );
+            }
+            // go down to the node to compute the offset
+            Ra::Core::Transform offset = Ra::Core::Transform::Identity();
+            if ( it == meshBones.end() )
+            {
+                // we are on the root: offset = Id
+                bone.second.m_offset = offset;
+                continue;
+            } else
+            { offset = assimpToCore( it->second->mOffsetMatrix ); }
+            while ( !parents.empty() )
+            {
+                offset = assimpToCore( parents.front()->mTransformation ).inverse() * offset;
+                parents.pop();
+            }
+            mapBone2Data[bone.first].m_offset = offset;
+        }
     }
 
     // find roots and leaves
@@ -224,16 +289,12 @@ void AssimpHandleDataLoader::loadHandleData(
         handle->setName( root );
 
         // Fetch the skeleton frame and name
-        aiNode* node = scene->mRootNode->FindNode( aiString( root ) );
         Core::Transform frame = Core::Transform::Identity();
-        if ( node->mParent != nullptr )
+        aiNode* node = skelRootToMeshNode[root];
+        while ( node != nullptr )
         {
+            frame = assimpToCore( node->mTransformation ) * frame;
             node = node->mParent;
-            while ( node != nullptr )
-            {
-                frame = assimpToCore( node->mTransformation ) * frame;
-                node = node->mParent;
-            }
         }
         handle->setFrame( frame );
 
