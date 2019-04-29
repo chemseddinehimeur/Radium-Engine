@@ -69,7 +69,7 @@ FileData* TinyPlyFileLoader::loadFile( const std::string& filename ) const {
     // The count returns the number of instances of the property group. The vectors
     // above will be resized into a multiple of the property group size as
     // they are "flattened"... i.e. verts = {x, y, z, x, y, z, ...}
-    uint32_t vertexCount = file.request_properties_from_element( "vertex", {"x", "y", "z"}, verts );
+    size_t vertexCount = file.request_properties_from_element( "vertex", {"x", "y", "z"}, verts );
 
     if ( vertexCount == 0 )
     {
@@ -87,11 +87,20 @@ FileData* TinyPlyFileLoader::loadFile( const std::string& filename ) const {
                                                     GeometryData::POINT_CLOUD );
 
     std::vector<float> normals;
-    std::vector<uint8_t> colors;
-    uint32_t normalCount =
+    std::vector<uint8_t> colors, alphas;
+    size_t normalCount =
         file.request_properties_from_element( "vertex", {"nx", "ny", "nz"}, normals );
-    uint32_t colorCount =
-        file.request_properties_from_element( "vertex", {"red", "green", "blue", "alpha"}, colors );
+    size_t alphaCount = file.request_properties_from_element( "vertex", {"alpha"}, alphas );
+    size_t colorCount;
+    if ( alphaCount == 0 )
+    {
+        colorCount = file.request_properties_from_element(
+            "vertex", {"red", "green", "blue", "alpha"}, colors );
+    } else
+    {
+        colorCount =
+            file.request_properties_from_element( "vertex", {"red", "green", "blue"}, colors );
+    }
 
     std::clock_t startTime;
     startTime = std::clock();
@@ -111,11 +120,26 @@ FileData* TinyPlyFileLoader::loadFile( const std::string& filename ) const {
 
     if ( colorCount != 0 )
     {
-        geometry->setColors(
-            *( reinterpret_cast<std::vector<Eigen::Matrix<uint8_t, 4, 1, Eigen::DontAlign>>*>(
-                &colors ) ) );
-        std::for_each( geometry->getColors().begin(), geometry->getColors().end(),
-                       []( auto& c ) { c /= Scalar( 255 ); } );
+        geometry->getColors().reserve( colorCount );
+        auto& container = geometry->getColors();
+
+        if ( alphaCount == colorCount )
+        {
+            auto* cols =
+                reinterpret_cast<std::vector<Eigen::Matrix<uint8_t, 4, 1, Eigen::DontAlign>>*>(
+                    &colors );
+            std::for_each( std::begin( *cols ), std::end( *cols ), [&container]( auto& c ) {
+                container.push_back( Core::Utils::Color( c ) / Scalar( 255 ) );
+            } );
+        } else
+        {
+            auto* cols =
+                reinterpret_cast<std::vector<Eigen::Matrix<uint8_t, 3, 1, Eigen::DontAlign>>*>(
+                    &colors );
+            std::for_each( std::begin( *cols ), std::end( *cols ), [&container]( auto& c ) {
+                container.push_back( Core::Utils::Color::fromRGB( c ) / Scalar( 255 ) );
+            } );
+        }
     }
 
     fileData->m_loadingTime = ( std::clock() - startTime ) / Scalar( CLOCKS_PER_SEC );
