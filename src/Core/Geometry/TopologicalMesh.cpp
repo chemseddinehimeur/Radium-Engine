@@ -270,6 +270,8 @@ TriangleMesh TopologicalMesh::toTriangleMesh() {
     return out;
 }
 
+
+
 bool TopologicalMesh::splitEdge( TopologicalMesh::EdgeHandle eh, Scalar f ) {
     // Global schema of operation
     /*

@@ -4,22 +4,9 @@
 #include <Core/Geometry/Normal.hpp>
 
 #include <Core/Animation/DualQuaternionSkinning.hpp>
-#include <Core/Animation/HandleWeightOperation.hpp>
 #include <Core/Animation/LinearBlendSkinning.hpp>
 #include <Core/Animation/RotationCenterSkinning.hpp>
-#include <Core/Animation/StretchableTwistableBoneSkinning.hpp>
-#include <Core/Geometry/DistanceQueries.hpp>
 #include <Core/Geometry/TriangleOperation.hpp>
-#include <Core/Utils/Color.hpp>
-
-#include <Engine/Renderer/Material/BlinnPhongMaterial.hpp>
-#include <Engine/Renderer/Mesh/Mesh.hpp>
-#include <Engine/Renderer/RenderObject/RenderObject.hpp>
-#include <Engine/Renderer/RenderObject/RenderObjectManager.hpp>
-#include <Engine/Renderer/RenderTechnique/RenderTechnique.hpp>
-#include <Engine/Renderer/RenderTechnique/ShaderConfigFactory.hpp>
-#include <Engine/Renderer/Texture/Texture.hpp>
-#include <Engine/Renderer/Texture/TextureManager.hpp>
 
 using Ra::Core::DualQuaternion;
 using Ra::Core::Quaternion;
@@ -96,8 +83,6 @@ void SkinningComponent::initialize() {
 
     if ( hasSkel && hasWeights && hasMesh && hasRefPose )
     {
-        m_renderObjectReader =
-            compMsg->getterCallback<Ra::Core::Utils::Index>( getEntity(), m_contentsName );
         m_skeletonGetter = compMsg->getterCallback<Skeleton>( getEntity(), m_contentsName );
         m_verticesWriter =
             compMsg->rwCallback<Ra::Core::Vector3Array>( getEntity(), m_contentsName + "v" );
@@ -144,29 +129,6 @@ void SkinningComponent::initialize() {
 
         m_isReady = true;
         setupSkinningType( m_skinningType );
-        setupSkinningType( STBS_LBS ); // ensure weights are present for display
-
-        // prepare RO for skinning weights display
-        auto ro = getRoMgr()->getRenderObject( *m_renderObjectReader() );
-        m_baseTechnique = ro->getRenderTechnique();
-        m_baseUV = ro->getMesh()->getData( Ra::Engine::Mesh::VERTEX_TEXCOORD );
-        m_weightTechnique.reset( new Ra::Engine::RenderTechnique );
-        auto builder = Ra::Engine::EngineRenderTechniques::getDefaultTechnique( "BlinnPhong" );
-        builder.second( *m_weightTechnique.get(), true );
-        auto matT = std::static_pointer_cast<Ra::Engine::BlinnPhongMaterial>(
-            ro->getRenderTechnique()->getMaterial() );
-        std::shared_ptr<Ra::Engine::BlinnPhongMaterial> mat(
-            new Ra::Engine::BlinnPhongMaterial( "IS2016_Mat" ) );
-        mat->m_kd = Ra::Core::Utils::Color::Skin();
-        mat->m_ks = Ra::Core::Utils::Color::White();
-        m_weightTechnique->setMaterial( mat );
-        // assign texture
-        Ra::Engine::TextureParameters texParam;
-        texParam.name = "Assets/Textures/Influence0.png";
-        auto tex = Ra::Engine::TextureManager::getInstance()->getOrLoadTexture( texParam );
-        mat->addTexture( Ra::Engine::BlinnPhongMaterial::TextureSemantic::TEX_DIFFUSE, tex );
-        // compute default weights uv
-        showWeightsType( 0 );
     }
 }
 
@@ -186,10 +148,8 @@ void SkinningComponent::skin() {
     {
         m_frameData.m_currentPose = skel->getPose( SpaceType::MODEL );
         if ( !Ra::Core::Animation::areEqual( m_frameData.m_currentPose,
-                                             m_frameData.m_previousPose ) ||
-             m_forceUpdate )
+                                             m_frameData.m_previousPose ) )
         {
-            m_forceUpdate = false;
             m_frameData.m_doSkinning = true;
             m_frameData.m_frameCounter++;
             m_frameData.m_refToCurrentRelPose =
@@ -220,24 +180,6 @@ void SkinningComponent::skin() {
                 Ra::Core::Animation::corSkinning(
                     m_refData.m_referenceMesh.vertices(), m_frameData.m_refToCurrentRelPose,
                     m_refData.m_weights, m_refData.m_CoR, m_frameData.m_currentPos );
-                break;
-            }
-            case STBS_LBS:
-            {
-                Ra::Core::Animation::linearBlendSkinningSTBS(
-                    m_refData.m_referenceMesh.vertices(), m_frameData.m_refToCurrentRelPose, *skel,
-                    m_refData.m_skeleton, m_refData.m_weights, m_weightSTBS,
-                    m_frameData.m_currentPos );
-                break;
-            }
-            case STBS_DQS:
-            {
-                Ra::Core::AlignedStdVector<DualQuaternion> DQ;
-                Ra::Core::Animation::computeDQSTBS( m_frameData.m_refToCurrentRelPose, *skel,
-                                                    m_refData.m_skeleton, m_refData.m_weights,
-                                                    m_weightSTBS, DQ );
-                Ra::Core::Animation::dualQuaternionSkinning( m_refData.m_referenceMesh.vertices(),
-                                                             DQ, m_frameData.m_currentPos );
                 break;
             }
             }
@@ -271,7 +213,7 @@ void uniformNormal( const Ra::Core::Vector3Array& p,
     }
 
 #pragma omp parallel for
-    for ( int i = 0; i < N; ++i )
+    for ( uint i = 0; i < N; ++i )
     {
         if ( !normal[i].isApprox( Ra::Core::Vector3::Zero() ) )
         {
@@ -280,7 +222,7 @@ void uniformNormal( const Ra::Core::Vector3Array& p,
     }
 
 #pragma omp parallel for
-    for ( int i = 0; i < N; ++i )
+    for ( uint i = 0; i < N; ++i )
     {
         normal[i] = normal[duplicateTable[i]];
     }
@@ -356,7 +298,6 @@ void SkinningComponent::setSkinningType( SkinningType type ) {
     if ( m_isReady )
     {
         setupSkinningType( type );
-        m_forceUpdate = true;
     }
 }
 
@@ -382,90 +323,8 @@ void SkinningComponent::setupSkinningType( SkinningType type ) {
         {
             Ra::Core::Animation::computeCoR( m_refData );
         }
-        break;
-    }
-    case STBS_DQS:
-    {
-        if ( m_DQ.empty() )
-        {
-            m_DQ.resize( m_refData.m_weights.rows(),
-                         DualQuaternion( Quaternion( 0.0, 0.0, 0.0, 0.0 ),
-                                         Quaternion( 0.0, 0.0, 0.0, 0.0 ) ) );
-        }
-    }
-        [[fallthrough]];
-    case STBS_LBS:
-    {
-        if ( m_weightSTBS.size() == 0 )
-        {
-            m_weightSTBS.resize( m_refData.m_weights.rows(), m_refData.m_weights.cols() );
-            std::vector<Eigen::Triplet<Scalar>> triplets;
-            const auto& V = m_refData.m_referenceMesh.vertices();
-            for ( int i = 0; i < m_weightSTBS.rows(); ++i )
-            {
-                const auto& pi = V[i];
-                for ( int j = 0; j < m_weightSTBS.cols(); ++j )
-                {
-                    Ra::Core::Vector3 a, b;
-                    m_refData.m_skeleton.getBonePoints( j, a, b );
-                    const Ra::Core::Vector3 ab = b - a;
-                    Scalar t = Ra::Core::Geometry::projectOnSegment( pi, a, ab );
-                    if ( t > 0 )
-                    {
-                        triplets.push_back( Eigen::Triplet<Scalar>( i, j, t ) );
-                    }
-                }
-            }
-            m_weightSTBS.setFromTriplets( triplets.begin(), triplets.end() );
-        }
     }
     } // end of switch.
-}
-
-void SkinningComponent::showWeights( bool on ) {
-    m_showingWeights = on;
-    auto ro = getRoMgr()->getRenderObject( *m_renderObjectReader() );
-    if ( m_showingWeights )
-    {
-        ro->setRenderTechnique( m_weightTechnique );
-        ro->getMesh()->addData( Ra::Engine::Mesh::VERTEX_TEXCOORD, m_weightsUV );
-    } else
-    {
-        ro->setRenderTechnique( m_baseTechnique );
-        ro->getMesh()->addData( Ra::Engine::Mesh::VERTEX_TEXCOORD, m_baseUV );
-    }
-    m_forceUpdate = true;
-}
-
-void SkinningComponent::showWeightsType( int type ) {
-    if ( !m_showingWeights )
-        return;
-    const uint size = m_frameData.m_currentPos.size();
-    m_weightsUV.resize( size, Ra::Core::Vector3::Zero() );
-    m_weightType = type;
-    if ( type == 0 )
-    {
-#pragma omp parallel for
-        for ( int i = 0; i < int( size ); ++i )
-        {
-            m_weightsUV[i][0] = m_refData.m_weights.coeff( i, m_weightBone );
-        }
-    } else
-    {
-#pragma omp parallel for
-        for ( int i = 0; i < int( size ); ++i )
-        {
-            m_weightsUV[i][0] = m_weightSTBS.coeff( i, m_weightBone );
-        }
-    }
-    showWeights( true );
-}
-
-void SkinningComponent::setWeightBone( uint bone ) {
-    if ( m_weightBone == bone )
-        return;
-    m_weightBone = bone;
-    showWeightsType( m_weightType );
 }
 
 } // namespace SkinningPlugin

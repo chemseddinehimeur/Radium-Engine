@@ -12,6 +12,7 @@
 #include <OpenMesh/Core/Mesh/Traits.hh>
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 #include <OpenMesh/Core/Utils/Property.hh>
+#include <OpenMesh/Core/Geometry/QuadricT.hh>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -77,7 +78,9 @@ class RA_CORE_API TopologicalMesh : public OpenMesh::PolyMesh_ArrayKernelT<Topol
      * \warning It uses the attributes defined on halfedges.
      */
     TriangleMesh toTriangleMesh();
+//   / OpenMesh::VPropHandleT< OpenMesh::Geometry::QuadricT<double> > quadrics_;
 
+    //void collapse(CollapseInfo ci);
     // import other version of halfedge_handle method
     using base::halfedge_handle;
 
@@ -314,6 +317,8 @@ class RA_CORE_API TopologicalMesh : public OpenMesh::PolyMesh_ArrayKernelT<Topol
      * \note Mesh attributes are linearly interpolated on the newly created halfedge.
      */
     bool splitEdge( TopologicalMesh::EdgeHandle eh, Scalar f );
+
+
     ///@}
 };
 

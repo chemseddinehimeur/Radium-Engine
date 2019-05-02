@@ -24,7 +24,10 @@ void computeDQ( const Pose& pose, const WeightMatrix& weight, DQList& DQ ) {
         const int nonZero = weight.col( j ).nonZeros();
 
         WeightMatrix::InnerIterator it0( weight, j );
-#pragma omp parallel for
+#if defined CORE_USE_OMP
+        omp_set_dynamic( 0 );
+#    pragma omp parallel for schedule( static ) num_threads( 4 )
+#endif
         // This for loop is here just because OpenMP wants classic for loops.
         // Since we cannot iterate directly through the non-zero elements using the InnerIterator,
         // we initialize an InnerIterator to the first element and then we increase it nz times.
@@ -54,7 +57,10 @@ void computeDQ( const Pose& pose, const WeightMatrix& weight, DQList& DQ ) {
     }
 
     // Normalize all dual quats.
-#pragma omp parallel for
+#if defined CORE_USE_OMP
+    omp_set_dynamic( 0 );
+#    pragma omp parallel for schedule( static ) num_threads( 4 )
+#endif
     for ( int i = 0; i < int( DQ.size() ); ++i )
     {
         DQ[i].normalize();
@@ -70,13 +76,12 @@ void computeDQ_naive( const Pose& pose, const WeightMatrix& weight, DQList& DQ )
                DualQuaternion( Quaternion( 0, 0, 0, 0 ), Quaternion( 0, 0, 0, 0 ) ) );
 
     std::vector<DualQuaternion> poseDQ;
-    poseDQ.resize( pose.size() );
+    poseDQ.reserve( pose.size() );
 
     // 1. Convert all transforms to DQ
-#pragma omp parallel for
     for ( int j = 0; j < weight.cols(); ++j )
     {
-        poseDQ[j] = DualQuaternion( pose[j] );
+        poseDQ.push_back( DualQuaternion( pose[j] ) );
     }
 
     // 2. for all vertices, blend the dual quats.
@@ -106,8 +111,7 @@ void computeDQ_naive( const Pose& pose, const WeightMatrix& weight, DQList& DQ )
     }
 
     // 3. renormalize all dual quats.
-#pragma omp parallel for
-    for ( int i = 0; i < DQ.size(); ++i )
+    for ( uint i = 0; i < DQ.size(); ++i )
     {
         DQ[i].normalize();
     }
@@ -118,7 +122,10 @@ void dualQuaternionSkinning( const Ra::Core::Vector3Array& input, const DQList& 
     const uint size = input.size();
     CORE_ASSERT( ( size == DQ.size() ), "input/DQ size mismatch." );
     output.resize( size );
-#pragma omp parallel for
+#if defined CORE_USE_OMP
+    omp_set_dynamic( 0 );
+#    pragma omp parallel for schedule( static ) num_threads( 4 )
+#endif
     for ( int i = 0; i < int( size ); ++i )
     {
         output[i] = DQ[i].transform( input[i] );

@@ -5,7 +5,6 @@
 
 #include <PluginBase/RadiumPluginInterface.hpp>
 #include <QAction>
-#include <QCheckBox>
 #include <QComboBox>
 #include <QFrame>
 #include <QObject>
@@ -34,14 +33,8 @@ class SkinningWidget : public QFrame {
   public:
     explicit SkinningWidget( QWidget* parent = nullptr );
 
-  signals:
-    void showWeights( bool );
-    void showWeightsType( int );
-
   public slots:
     void setCurrent( const Ra::Engine::ItemEntry& entry, SkinningComponent* comp );
-    void onShowWeightsToggled( bool on );
-    void onSkinningWeightsChanged( int newType );
 
   private slots:
     void onSkinningChanged( int newType );
@@ -49,19 +42,13 @@ class SkinningWidget : public QFrame {
     void onLSBActionTriggered();
     void onDQActionTriggered();
     void onCoRActionTriggered();
-    void onSTBSLBSActionTriggered();
-    void onSTBSDQSActionTriggered();
 
   private:
     SkinningComponent* m_current;
     QComboBox* m_skinningSelect;
-    QCheckBox* m_showWeights;
-    QComboBox* m_skinningWeights;
     QAction* m_actionLBS;
     QAction* m_actionDQ;
     QAction* m_actionCoR;
-    QAction* m_actionSTBSLBS;
-    QAction* m_actionSTBSDQS;
 };
 
 // Du to an ambiguous name while compiling with Clang, must differentiate plugin claas from plugin
@@ -85,13 +72,8 @@ class SkinningPluginC : public QObject, Ra::Plugins::RadiumPluginInterface {
     virtual bool doAddAction( int& nb ) override;
     virtual QAction* getAction( int id ) override;
 
-    bool doAddROpenGLInitializer() override;
-    void openGlInitialize( const Ra::PluginContext& context ) override;
-
   private slots:
     void onCurrentChanged( const QModelIndex& current, const QModelIndex& prev );
-    void onShowWeights( bool on );
-    void onShowWeightsType( int type );
 
   private:
     SkinningSystem* m_system;
