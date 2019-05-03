@@ -156,7 +156,7 @@ size_t DecimaterT<Mesh>::decimate(size_t _n_collapses) {
     // setup collapse info
     CollapseInfo ci(mesh_, v0v1);
     double x,y,z;
-    getpose(&x,&y,&z,ci);
+   getpose(&x,&y,&z,ci);
     // check topological correctness AGAIN !
     if (!this->is_collapse_legal(ci))
       continue;
@@ -166,11 +166,11 @@ size_t DecimaterT<Mesh>::decimate(size_t _n_collapses) {
     support.clear();
     for (; vv_it.is_valid(); ++vv_it)
       support.push_back(*vv_it);
-
+    Point pt(x,y,z);
+        mesh_.set_point(vp,pt);
     // pre-processing
     this->preprocess_collapse(ci);
-    Point pt(x,y,z);
-    mesh_.set_point(vp,pt);
+
     // perform collapse
     mesh_.collapse(v0v1);
     ++n_collapses;
@@ -211,6 +211,8 @@ template<class Mesh>
 void DecimaterT<Mesh>::getpose(double *x, double *y, double *z,CollapseInfo _ci)
 {
 
+
+
  Geometry::QuadricT<double> Q =  mesh_.property(quadrics_, _ci.v0);
                             Q   +=  mesh_.property(quadrics_, _ci.v1);
 
@@ -238,6 +240,12 @@ using namespace Eigen;
    *z=X(2);
 
 
+}
+
+template<typename Mesh>
+void DecimaterT<Mesh>::setquad( VPropHandleT< Geometry::QuadricT<double> >  dq)
+{
+        quadrics_ = dq;
 }
 
 //-----------------------------------------------------------------------------

@@ -16,7 +16,7 @@ int Decimator::decimate(int collapses,int type)
     DecimaterT<TopologicalMesh> Dec(*m);
 
 
-   Decimater::ModQuadricT<TopologicalMesh>::Handle MQ;
+    ModQuadricT<TopologicalMesh>::Handle MQ;
 //   Decimater::ModQuadricT<TopologicalMesh> Quad(*m);
 //   Quad.initialize();
 //   Quad.
@@ -24,9 +24,10 @@ int Decimator::decimate(int collapses,int type)
     Dec.add(MQ);
     Dec.module(MQ).unset_max_err();
     if(!Dec.initialize()) return -1;
-    Dec.module(MQ).quadricsHandle();
 
-    return  Dec.decimate(collapses);
+    Dec.setquad(Dec.module(MQ).quadricsHandle());
+
+    return Dec.decimate(0);
 }
 
 void Decimator::detach()

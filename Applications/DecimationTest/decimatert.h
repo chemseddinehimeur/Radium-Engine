@@ -73,6 +73,7 @@ public:
   size_t decimate( size_t _n_collapses = 0 );
 
   void getpose(double *x,double *y, double *z,CollapseInfo ci);
+  void setquad( VPropHandleT< Geometry::QuadricT<double> >  dq);
   /**
    * @brief Decimate the mesh to a desired target vertex complexity.
    * @param _n_vertices Target complexity, i.e. desired number of remaining

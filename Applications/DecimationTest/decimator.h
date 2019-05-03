@@ -4,7 +4,7 @@
 #include <Core/Geometry/TopologicalMesh.hpp>
 #include <Core/Utils/Log.hpp>
 #include <IO/deprecated/OBJFileManager.hpp>
-#include <OpenMesh/Tools/Decimater/ModQuadricT.hh>
+#include <ModQuadricT.h>
 #include <memory>
 #include <decimatert.h>
 

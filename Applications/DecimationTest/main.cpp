@@ -47,7 +47,7 @@ args processArgs( int argc, char* argv[] ) {
     bool outputFilenameSet{false};
     bool subdividerSet{false};
     ret.iteration = 1;
-
+/*
     for ( int i = 1; i < argc; i += 2 )
     {
         if ( i >= argc )
@@ -89,7 +89,13 @@ args processArgs( int argc, char* argv[] ) {
             }
         }
     }
-    ret.valid = outputFilenameSet && subdividerSet;
+*/
+    ret.iteration=1;
+    ret.inputFilename = "sp.obj";
+    ret.outputFilename ="sp2";
+    ret.subdivider = std::make_unique<Ra::Core::Geometry::LoopSubdivider>();
+
+    ret.valid = true; //outputFilenameSet && subdividerSet;
     return ret;
 }
 
@@ -113,13 +119,13 @@ int main( int argc, char* argv[] ) {
         LOG( logINFO ) << "in Mesh";
         for ( auto v : mesh.vertices() )
         {
-            LOG( logINFO ) << v.transpose();
+      //      LOG( logINFO ) << v.transpose();
         }
 
         LOG( logINFO ) << "in Normals";
         for ( auto v : mesh.normals() )
         {
-            LOG( logINFO ) << v.transpose();
+        //    LOG( logINFO ) << v.transpose();
         }
 
 #ifdef TEST_ATTRIBUTES_SUBDIV
