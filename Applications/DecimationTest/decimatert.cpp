@@ -156,7 +156,8 @@ size_t DecimaterT<Mesh>::decimate(size_t _n_collapses) {
     // setup collapse info
     CollapseInfo ci(mesh_, v0v1);
     double x,y,z;
-   getpose(&x,&y,&z,ci);
+    getpose(&x,&y,&z,ci);
+
     // check topological correctness AGAIN !
     if (!this->is_collapse_legal(ci))
       continue;
@@ -166,8 +167,10 @@ size_t DecimaterT<Mesh>::decimate(size_t _n_collapses) {
     support.clear();
     for (; vv_it.is_valid(); ++vv_it)
       support.push_back(*vv_it);
+
     Point pt(x,y,z);
-        mesh_.set_point(vp,pt);
+    mesh_.set_point(ci.v1,pt);
+
     // pre-processing
     this->preprocess_collapse(ci);
 
@@ -213,13 +216,13 @@ void DecimaterT<Mesh>::getpose(double *x, double *y, double *z,CollapseInfo _ci)
 
 
 
- Geometry::QuadricT<double> Q =  mesh_.property(quadrics_, _ci.v0);
-                            Q   +=  mesh_.property(quadrics_, _ci.v1);
+ Geometry::QuadricT<double> Q  =  mesh_.property(quadrics_, _ci.v0);
+                            Q +=  mesh_.property(quadrics_, _ci.v1);
 
-using namespace Eigen;
-  MatrixXd A(3,3);
-  VectorXd b(3);
-  VectorXd X(3);
+    using namespace Eigen;
+    MatrixXd A(3,3);
+    VectorXd b(3);
+    VectorXd X(3);
 
    A(0,0) = Q.a();
    A(0,1) = Q.b();
@@ -230,9 +233,9 @@ using namespace Eigen;
    A(2,0) = Q.c();
    A(2,1) = Q.f();
    A(2,2) = Q.h();
-   b(0)=Q.d();
-   b(1)=Q.g();
-   b(2)=Q.i();
+   b(0)=-Q.d();
+   b(1)=-Q.g();
+   b(2)=-Q.i();
 
    X = A.colPivHouseholderQr().solve(b);
    *x=X(0);
