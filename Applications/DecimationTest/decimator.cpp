@@ -27,7 +27,7 @@ int Decimator::decimate(int collapses,int type)
 
     Dec.setquad(Dec.module(MQ).quadricsHandle());
 
-    return Dec.decimate(20000);
+    return Dec.decimate(collapses);
 }
 
 void Decimator::detach()
